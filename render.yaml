@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: control-asistencia-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: APP_MODE
+        value: production
+      - key: DB_TYPE
+        value: postgres
+      - key: DB_SSL
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: control-asistencia-db
+          property: connectionString
+
+databases:
+  - name: control-asistencia-db
+    plan: free
+    databaseName: control_asistencia

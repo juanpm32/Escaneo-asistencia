@@ -1,0 +1,21 @@
+{
+  "name": "control-asistencia-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API de control de asistencia por DNI peruano",
+  "engines": {
+    "node": "20.20.2",
+    "npm": "10.8.2"
+  },
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mssql": "^11.0.1",
+    "pg": "^8.23.1"
+  }
+}
