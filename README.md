@@ -4,11 +4,11 @@ Registro de entrada leyendo el código de barras del DNI peruano con la cámara 
 
 El backend arranca en modo DEMO: no hace falta SQL Server para probar el escáner, el registro y la consulta. Los datos de ese modo viven en memoria.
 
-Requiere Node.js 20.20.2 y npm 10.8.2. El instalador de Node ya trae esa versión de npm.
+Vercel publica el frontend con Node.js 26.x, que es la versión mayor que acepta. No admite un parche fijo: en `package.json` tiene que decir `"node": "26.x"`. El instalador actual de esa línea es Node.js 26.13.0 y trae npm 11.20.0.
 
-- Node.js 20.20.2 para Windows de 64 bits: [node-v20.20.2-x64.msi](https://nodejs.org/dist/v20.20.2/node-v20.20.2-x64.msi)
-- Otras plataformas y el código fuente: [índice de Node.js 20.20.2](https://nodejs.org/dist/v20.20.2/)
-- npm 10.8.2, por si hace falta reinstalarlo: [npm-10.8.2.tgz](https://registry.npmjs.org/npm/-/npm-10.8.2.tgz)
+- Node.js 26.13.0 para Windows de 64 bits: [node-v26.13.0-x64.msi](https://nodejs.org/dist/v26.13.0/node-v26.13.0-x64.msi)
+- Otras plataformas y el código fuente: [índice de Node.js 26.13.0](https://nodejs.org/dist/v26.13.0/)
+- npm 11.20.0, por si hace falta reinstalarlo: [npm-11.20.0.tgz](https://registry.npmjs.org/npm/-/npm-11.20.0.tgz)
 
 ## Ejecutar
 
