@@ -1,5 +1,8 @@
 import axios from 'axios';
+import dataStore from '../config/dataStore.json';
 import { localHealth, localList, localListToday, localRegister } from './localStore';
+
+const localMode = String(dataStore.store || '').trim().toLowerCase() === 'localstorage';
 
 const client = axios.create({
     baseURL: (import.meta.env.VITE_API_URL || '').replace(/\/$/, ''),
@@ -8,10 +11,6 @@ const client = axios.create({
         'Content-Type': 'application/json',
     },
 });
-
-function envRequestsLocalStorage() {
-    return String(import.meta.env.VITE_DB_MODE || '').trim().toLowerCase() === 'localstorage';
-}
 
 let healthRequest = null;
 
@@ -28,16 +27,8 @@ function fetchHealth() {
     return healthRequest;
 }
 
-async function usesLocalStorage() {
-    if (envRequestsLocalStorage()) {
-        return true;
-    }
-    try {
-        const health = await fetchHealth();
-        return Boolean(health && health.base_datos === 'localstorage');
-    } catch (_error) {
-        return false;
-    }
+function usesLocalStorage() {
+    return localMode;
 }
 
 export function getErrorMessage(error) {
@@ -47,21 +38,21 @@ export function getErrorMessage(error) {
     if (error && error.isAttendance) {
         return error.message;
     }
-    if (envRequestsLocalStorage()) {
+    if (localMode) {
         return (error && error.message) || 'No se pudo guardar en este navegador.';
     }
     return 'No se pudo conectar con el servidor.';
 }
 
 export async function getHealth() {
-    if (await usesLocalStorage()) {
+    if (usesLocalStorage()) {
         return localHealth();
     }
     return fetchHealth();
 }
 
 export async function getAttendance() {
-    if (await usesLocalStorage()) {
+    if (usesLocalStorage()) {
         return { ok: true, asistencias: localList() };
     }
     const response = await client.get('/api/attendance');
@@ -69,7 +60,7 @@ export async function getAttendance() {
 }
 
 export async function getAttendanceToday() {
-    if (await usesLocalStorage()) {
+    if (usesLocalStorage()) {
         return { ok: true, asistencias: localListToday() };
     }
     const response = await client.get('/api/attendance/today');
@@ -77,7 +68,7 @@ export async function getAttendanceToday() {
 }
 
 export async function registerAttendance(payload) {
-    if (await usesLocalStorage()) {
+    if (usesLocalStorage()) {
         return localRegister(payload);
     }
     const response = await client.post('/api/attendance/register', payload);

@@ -7,10 +7,6 @@ services:
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
-      - key: APP_MODE
-        value: production
-      - key: DB_TYPE
-        value: postgres
       - key: DB_SSL
         value: "true"
       - key: DATABASE_URL

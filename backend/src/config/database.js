@@ -3,6 +3,8 @@ const dotenv = require('dotenv');
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
+const dataStore = require('../../../frontend/src/config/dataStore.json');
+
 const REQUIRED_TABLES = ['tbl_personas', 'tbl_asistencias', 'tbl_configuracion'];
 
 const memory = {
@@ -58,16 +60,7 @@ function canonicalDbType(raw) {
 }
 
 function getMode() {
-    const raw = (process.env.DB_TYPE || '').trim().toLowerCase();
-    if (!raw) {
-        const appMode = (process.env.APP_MODE || 'demo').trim().toLowerCase();
-        if (appMode === 'production') {
-            return { appMode: 'production', dbType: '' };
-        }
-        return { appMode: 'demo', dbType: 'mock' };
-    }
-
-    const dbType = canonicalDbType(raw);
+    const dbType = canonicalDbType(dataStore.store);
     if (dbType === 'postgres' || dbType === 'sqlserver') {
         return { appMode: 'production', dbType };
     }
@@ -77,10 +70,7 @@ function getMode() {
     if (dbType === 'mock') {
         return { appMode: 'demo', dbType: 'mock' };
     }
-    return {
-        appMode: (process.env.APP_MODE || 'demo').trim().toLowerCase(),
-        dbType: raw,
-    };
+    return { appMode: 'demo', dbType };
 }
 
 function isSqlMode() {
@@ -188,7 +178,7 @@ async function initDatabase() {
 
     if (!isSqlMode()) {
         const mode = getMode();
-        dbError = `DB_TYPE no reconocido (${mode.dbType || 'vacio'}). Use mock, localstorage, sqlserver o postgres.`;
+        dbError = `Almacen no reconocido (${mode.dbType || 'vacio'}) en frontend/src/config/dataStore.json. Use mock, localstorage, sqlserver o postgres.`;
         return;
     }
 

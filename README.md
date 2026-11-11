@@ -44,35 +44,14 @@ El mismo DNI no puede registrar otra entrada durante 5 minutos. La fecha y la ho
 
 ## Modos
 
-La base la elige una sola variable, `DB_TYPE`, en `backend/.env`. Hay que reiniciar el backend después de cambiarla.
+El almacén se elige en código, en `frontend/src/config/dataStore.json`, con el campo `store`:
 
-DEMO, en memoria del servidor:
+- `localstorage` guarda personas y asistencias en el navegador.
+- `sqlserver` usa SQL Server. `mssql` se acepta como alias.
+- `postgres` usa PostgreSQL.
+- `mock` guarda en la memoria del servidor y se pierde al detenerlo.
 
-```env
-DB_TYPE=mock
-```
-
-SQL Server:
-
-```env
-DB_TYPE=sqlserver
-```
-
-PostgreSQL, el que se usa en Render:
-
-```env
-DB_TYPE=postgres
-DATABASE_URL=postgres://usuario:clave@host:5432/control_asistencia
-DB_SSL=true
-```
-
-Navegador. No abre PostgreSQL ni SQL Server. Las personas y las asistencias quedan en `localStorage` de ese navegador:
-
-```env
-DB_TYPE=localstorage
-```
-
-La misma opción se puede forzar sin backend, en `frontend/.env`, con `VITE_DB_MODE=localstorage`. Si esa variable está vacía, la página sigue lo que diga `DB_TYPE`. `mssql` sigue valiendo como alias de `sqlserver`.
+Hay que reiniciar el backend y el frontend después de cambiar ese archivo. Las credenciales siguen en `backend/.env`: `DATABASE_URL` para PostgreSQL y `DB_HOST`, `DB_USER` y `DB_PASSWORD` para SQL Server.
 
 SQL Server se instala con los scripts de [database/sqlserver](database/sqlserver). PostgreSQL se crea con [database/postgres/01_create_tables.sql](database/postgres/01_create_tables.sql). El detalle está en [docs/INSTALACION_BASE_DATOS.md](docs/INSTALACION_BASE_DATOS.md).
 
@@ -85,7 +64,7 @@ Frontend en Vercel y backend en Render. Primero el backend, porque Vercel necesi
 1. Cree un PostgreSQL y copie la External Database URL.
 2. Conéctese con `psql` o el shell de Render y ejecute `database/postgres/01_create_tables.sql`.
 3. Cree un Web Service con la raíz del repositorio, directorio raíz `backend`, build `npm install` y start `npm start`.
-4. Variables: `DB_TYPE=postgres`, `DATABASE_URL` con la URL copiada y `DB_SSL=true`.
+4. En `frontend/src/config/dataStore.json` deje `"store": "postgres"`. En el servicio: `DATABASE_URL` con la URL copiada y `DB_SSL=true`.
 5. Abra `https://su-servicio.onrender.com/api/health`. Debe decir `base_datos: postgres` y `conectado: true`.
 
 El archivo `render.yaml` describe ese servicio y la base. Si el plan `free` no aparece en su cuenta, cree la base desde el panel y pegue `DATABASE_URL` a mano.
