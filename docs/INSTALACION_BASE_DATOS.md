@@ -251,8 +251,7 @@ Haga en el servidor todo lo de la sección 4. Además:
 4. En el equipo donde corre Node, `backend/.env` debe apuntar a la IP o al nombre del servidor, no a `localhost`:
 
 ```env
-APP_MODE=production
-DB_TYPE=mssql
+DB_TYPE=sqlserver
 DB_HOST=192.168.1.20
 DB_PORT=1433
 DB_NAME=DB_CONTROL_ASISTENCIA
@@ -302,12 +301,11 @@ Test-NetConnection 192.168.1.20 -Port 1433
 
 ## 8. Configurar el archivo .env
 
-El archivo es `backend/.env`. El sistema no tiene otra llave de modo.
+El archivo es `backend/.env`. La conexión la decide `DB_TYPE`: `mock`, `sqlserver`, `postgres` o `localstorage`.
 
 Modo DEMO, sin SQL Server. Es el valor con el que se entrega el proyecto:
 
 ```env
-APP_MODE=demo
 DB_TYPE=mock
 PORT=3001
 
@@ -323,8 +321,7 @@ DB_TRUST_SERVER_CERTIFICATE=true
 Modo SQL Server. Cambie usuario, contraseña, host y puerto por los de la sección 4 o 5:
 
 ```env
-APP_MODE=production
-DB_TYPE=mssql
+DB_TYPE=sqlserver
 PORT=3001
 
 DB_HOST=localhost
@@ -338,15 +335,16 @@ DB_TRUST_SERVER_CERTIFICATE=true
 
 Reglas:
 
-- DEMO es `APP_MODE=demo` junto con `DB_TYPE=mock`.
-- SQL Server es `APP_MODE=production` junto con `DB_TYPE=mssql`.
-- PostgreSQL es `APP_MODE=production` junto con `DB_TYPE=postgres`.
-- Si las variables no forman uno de esos pares, `/api/health` responde que la configuración no es válida y no graba asistencias.
+- DEMO es `DB_TYPE=mock`.
+- SQL Server es `DB_TYPE=sqlserver`. `mssql` se acepta como alias.
+- PostgreSQL es `DB_TYPE=postgres`.
+- Navegador es `DB_TYPE=localstorage`. También se puede forzar en `frontend/.env` con `VITE_DB_MODE=localstorage`.
+- Si `DB_TYPE` no es uno de esos valores, `/api/health` responde que la configuración no es válida y no graba asistencias.
 - Si la contraseña tiene `#`, enciérrela entre comillas dobles.
 - Después de editar `.env`, detenga y vuelva a iniciar el backend. No basta con guardar el archivo.
 - Deje `DB_ENCRYPT=false` en SQL Server 2008 R2. El código fuerza el protocolo TDS 7.3.B; no hay que escribir esa versión en el `.env`.
 
-`frontend/.env` solo contiene `VITE_API_URL=`. Déjelo vacío para que el celular hable con el proxy de Vite y no con su propio `localhost`.
+`frontend/.env` lleva `VITE_API_URL` y `VITE_DB_MODE`. Deje `VITE_API_URL` vacío para que el celular hable con el proxy de Vite y no con su propio `localhost`. Deje `VITE_DB_MODE` vacío para seguir el `DB_TYPE` del backend. `VITE_DB_MODE=localstorage` guarda los datos en el navegador aunque el backend esté apagado.
 
 ## 9. Probar la conexión desde Node.js
 
@@ -388,7 +386,7 @@ sql.connect(config)
     });
 ```
 
-Ejecútelo con el `.env` ya en modo `production` / `mssql`:
+Ejecútelo con el `.env` ya en `DB_TYPE=sqlserver`:
 
 ```bash
 node probar-conexion.js
@@ -413,7 +411,7 @@ Respuesta esperada cuando la base y las tres tablas existen:
   "ok": true,
   "servidor": "en linea",
   "modo": "production",
-  "base_datos": "mssql",
+  "base_datos": "sqlserver",
   "conectado": true,
   "mensaje": "Conexion con SQL Server correcta."
 }
@@ -434,7 +432,6 @@ Borre `probar-conexion.js` cuando termine. La aplicación no lo necesita.
 No instale SQL Server ni ejecute los scripts. En `backend/.env`:
 
 ```env
-APP_MODE=demo
 DB_TYPE=mock
 ```
 
@@ -471,7 +468,6 @@ El script está en `database/postgres/01_create_tables.sql` y se puede volver a 
 En `backend/.env`, o en las variables del servicio de Render:
 
 ```env
-APP_MODE=production
 DB_TYPE=postgres
 DATABASE_URL=postgres://usuario:clave@host:5432/control_asistencia
 DB_SSL=true

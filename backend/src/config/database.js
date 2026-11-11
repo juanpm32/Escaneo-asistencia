@@ -40,26 +40,63 @@ function envFlag(name, defaultValue) {
     return String(value).trim().toLowerCase() === 'true';
 }
 
+function canonicalDbType(raw) {
+    const value = String(raw || '').trim().toLowerCase();
+    if (value === 'postgresql') {
+        return 'postgres';
+    }
+    if (value === 'sqlserver' || value === 'sql_server' || value === 'mssql') {
+        return 'sqlserver';
+    }
+    if (value === 'localstorage' || value === 'local-storage') {
+        return 'localstorage';
+    }
+    if (value === 'mock' || value === 'memory' || value === 'demo') {
+        return 'mock';
+    }
+    return value;
+}
+
 function getMode() {
+    const raw = (process.env.DB_TYPE || '').trim().toLowerCase();
+    if (!raw) {
+        const appMode = (process.env.APP_MODE || 'demo').trim().toLowerCase();
+        if (appMode === 'production') {
+            return { appMode: 'production', dbType: '' };
+        }
+        return { appMode: 'demo', dbType: 'mock' };
+    }
+
+    const dbType = canonicalDbType(raw);
+    if (dbType === 'postgres' || dbType === 'sqlserver') {
+        return { appMode: 'production', dbType };
+    }
+    if (dbType === 'localstorage') {
+        return { appMode: 'localstorage', dbType: 'localstorage' };
+    }
+    if (dbType === 'mock') {
+        return { appMode: 'demo', dbType: 'mock' };
+    }
     return {
         appMode: (process.env.APP_MODE || 'demo').trim().toLowerCase(),
-        dbType: (process.env.DB_TYPE || 'mock').trim().toLowerCase(),
+        dbType: raw,
     };
 }
 
 function isSqlMode() {
-    const mode = getMode();
-    return mode.appMode === 'production' && mode.dbType === 'mssql';
+    return getMode().dbType === 'sqlserver';
 }
 
 function isPostgres() {
-    const mode = getMode();
-    return mode.appMode === 'production' && (mode.dbType === 'postgres' || mode.dbType === 'postgresql');
+    return getMode().dbType === 'postgres';
 }
 
 function isMock() {
-    const mode = getMode();
-    return mode.appMode === 'demo' && mode.dbType === 'mock';
+    return getMode().dbType === 'mock';
+}
+
+function isLocalStorage() {
+    return getMode().dbType === 'localstorage';
 }
 
 function getMemory() {
@@ -140,7 +177,7 @@ async function initDatabase() {
     tables = [];
     driver = null;
 
-    if (isMock()) {
+    if (isMock() || isLocalStorage()) {
         return;
     }
 
@@ -151,7 +188,7 @@ async function initDatabase() {
 
     if (!isSqlMode()) {
         const mode = getMode();
-        dbError = `Configuracion no reconocida (APP_MODE=${mode.appMode}, DB_TYPE=${mode.dbType}). Use demo/mock, production/mssql o production/postgres.`;
+        dbError = `DB_TYPE no reconocido (${mode.dbType || 'vacio'}). Use mock, localstorage, sqlserver o postgres.`;
         return;
     }
 
@@ -244,6 +281,17 @@ async function getStatus() {
         };
     }
 
+    if (isLocalStorage()) {
+        return {
+            ok: true,
+            servidor: 'en linea',
+            modo: mode.appMode,
+            base_datos: 'localstorage',
+            conectado: true,
+            mensaje: 'Modo navegador. Las asistencias se guardan en este navegador.',
+        };
+    }
+
     if (!isSqlMode() && !isPostgres()) {
         return {
             ok: false,
@@ -316,6 +364,7 @@ module.exports = {
     getMemory,
     getMode,
     isMock,
+    isLocalStorage,
     isPostgres,
     closeDatabase,
     buildMssqlConfig,

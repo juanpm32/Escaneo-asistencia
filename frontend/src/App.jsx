@@ -2,14 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import AttendanceTable from './components/AttendanceTable';
 import Scanner from './components/Scanner';
 import { getAttendance, getAttendanceToday, getErrorMessage, getHealth } from './services/api';
-import { displayName, formatFecha } from './services/dniParser';
 
 const dateFormatter = new Intl.DateTimeFormat('es-PE', {
     timeZone: 'America/Lima',
-    weekday: 'long',
+    weekday: 'short',
     day: '2-digit',
-    month: 'long',
-    year: 'numeric',
+    month: 'short',
 });
 
 const timeFormatter = new Intl.DateTimeFormat('es-PE', {
@@ -19,6 +17,22 @@ const timeFormatter = new Intl.DateTimeFormat('es-PE', {
     second: '2-digit',
     hourCycle: 'h23',
 });
+
+function connectionLabel(health) {
+    if (!health || !health.ok) {
+        return (health && health.mensaje) || 'Sin conexión';
+    }
+    if (health.base_datos === 'localstorage') {
+        return 'Guardado en este teléfono';
+    }
+    if (health.base_datos === 'postgres') {
+        return 'PostgreSQL';
+    }
+    if (health.base_datos === 'sqlserver' || health.base_datos === 'mssql') {
+        return 'SQL Server';
+    }
+    return 'Solo en esta sesión';
+}
 
 export default function App() {
     const [now, setNow] = useState(() => new Date());
@@ -58,57 +72,29 @@ export default function App() {
         return () => window.clearInterval(timer);
     }, []);
 
-    const latest = today[0];
     const connected = Boolean(health && health.ok);
-    const connectionText = connected
-        ? (health.base_datos === 'mssql' ? 'SQL Server conectado' : 'Modo demo · memoria')
-        : ((health && health.mensaje) || 'Sin conexión con el servidor');
+    const todayCount = connected ? today.length : null;
 
     return (
         <div className="app">
-            <div className="shell">
-                <header className="topbar">
-                    <div>
-                        <p className="eyebrow">Registro de entrada</p>
-                        <h1>Control de Asistencia</h1>
-                    </div>
-                    <div className="clock" aria-live="polite">
-                        <span className="clock-date">{dateFormatter.format(now)}</span>
-                        <span className="clock-time">{timeFormatter.format(now)}</span>
-                    </div>
-                </header>
-
-                <main>
-                    <div className="workspace">
-                        <Scanner onRegistered={load} />
-                        <aside className="panel summary" aria-label="Resumen de asistencias">
-                            <p className="summary-label">Hoy</p>
-                            <p className="summary-count">{connected ? today.length : '—'}</p>
-                            <p className="summary-caption">
-                                {!connected
-                                    ? 'sin datos del servidor'
-                                    : today.length === 1
-                                        ? 'entrada registrada'
-                                        : 'entradas registradas'}
-                            </p>
-                            <div className="summary-last">
-                                <p>Última entrada</p>
-                                {latest ? (
-                                    <>
-                                        <strong>{latest.numero_dni}</strong>
-                                        <span>{displayName(latest) || 'Identificado por DNI'}</span>
-                                        <span>{formatFecha(latest.fecha_asistencia)} · {latest.hora_asistencia}</span>
-                                    </>
-                                ) : (
-                                    <span>Sin registros hoy</span>
-                                )}
-                            </div>
-                            <p className={connected ? 'link-status ok' : 'link-status bad'}>{connectionText}</p>
-                        </aside>
-                    </div>
-                    <AttendanceTable records={records} error={loadError} />
-                </main>
-            </div>
+            <header className="bar">
+                <div>
+                    <h1>Control de asistencia</h1>
+                    <p className="bar-date">{dateFormatter.format(now)}</p>
+                </div>
+                <div className="bar-meta">
+                    <time className="bar-time" aria-live="polite">{timeFormatter.format(now)}</time>
+                    <p className="bar-count">
+                        <strong>{todayCount == null ? '–' : todayCount}</strong>
+                        <span> hoy</span>
+                    </p>
+                </div>
+            </header>
+            <p className={connected ? 'status ok' : 'status bad'}>{connectionLabel(health)}</p>
+            <main className="layout">
+                <Scanner onRegistered={load} />
+                <AttendanceTable records={records} error={loadError} />
+            </main>
         </div>
     );
 }

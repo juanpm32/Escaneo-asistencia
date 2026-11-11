@@ -40,36 +40,41 @@ No todos los DNI usan el mismo código.
 - **DNI adulto de 1997:** el PDF417 sí trae número, apellidos y nombres en campos de ancho fijo. Si la lectura coincide con ese formato, se guardan los nombres.
 - Si el código no trae nombres, la asistencia queda identificada por el DNI.
 
-El mismo DNI no puede registrar otra entrada durante 5 minutos. La fecha y la hora las pone el servidor. En modo DEMO es el reloj de la PC. En SQL Server es el reloj de esa instancia. En PostgreSQL se usa la hora de Lima (`America/Lima`), aunque el servidor de Render esté en UTC.
+El mismo DNI no puede registrar otra entrada durante 5 minutos. La fecha y la hora las pone el servidor. En modo DEMO es el reloj de la PC. En SQL Server es el reloj de esa instancia. En PostgreSQL y en el modo navegador se usa la hora de Lima (`America/Lima`).
 
 ## Modos
 
-Se cambia solo en `backend/.env` y hay que reiniciar el backend.
+La base la elige una sola variable, `DB_TYPE`, en `backend/.env`. Hay que reiniciar el backend después de cambiarla.
 
-DEMO, sin SQL Server:
+DEMO, en memoria del servidor:
 
 ```env
-APP_MODE=demo
 DB_TYPE=mock
 ```
 
 SQL Server:
 
 ```env
-APP_MODE=production
-DB_TYPE=mssql
+DB_TYPE=sqlserver
 ```
 
 PostgreSQL, el que se usa en Render:
 
 ```env
-APP_MODE=production
 DB_TYPE=postgres
 DATABASE_URL=postgres://usuario:clave@host:5432/control_asistencia
 DB_SSL=true
 ```
 
-Las dos variables `APP_MODE` y `DB_TYPE` tienen que ir juntas. SQL Server se instala con los scripts de [database/sqlserver](database/sqlserver). PostgreSQL se crea con [database/postgres/01_create_tables.sql](database/postgres/01_create_tables.sql). El detalle está en [docs/INSTALACION_BASE_DATOS.md](docs/INSTALACION_BASE_DATOS.md).
+Navegador. No abre PostgreSQL ni SQL Server. Las personas y las asistencias quedan en `localStorage` de ese navegador:
+
+```env
+DB_TYPE=localstorage
+```
+
+La misma opción se puede forzar sin backend, en `frontend/.env`, con `VITE_DB_MODE=localstorage`. Si esa variable está vacía, la página sigue lo que diga `DB_TYPE`. `mssql` sigue valiendo como alias de `sqlserver`.
+
+SQL Server se instala con los scripts de [database/sqlserver](database/sqlserver). PostgreSQL se crea con [database/postgres/01_create_tables.sql](database/postgres/01_create_tables.sql). El detalle está en [docs/INSTALACION_BASE_DATOS.md](docs/INSTALACION_BASE_DATOS.md).
 
 ## Desplegar
 
@@ -80,7 +85,7 @@ Frontend en Vercel y backend en Render. Primero el backend, porque Vercel necesi
 1. Cree un PostgreSQL y copie la External Database URL.
 2. Conéctese con `psql` o el shell de Render y ejecute `database/postgres/01_create_tables.sql`.
 3. Cree un Web Service con la raíz del repositorio, directorio raíz `backend`, build `npm install` y start `npm start`.
-4. Variables: `APP_MODE=production`, `DB_TYPE=postgres`, `DATABASE_URL` con la URL copiada y `DB_SSL=true`.
+4. Variables: `DB_TYPE=postgres`, `DATABASE_URL` con la URL copiada y `DB_SSL=true`.
 5. Abra `https://su-servicio.onrender.com/api/health`. Debe decir `base_datos: postgres` y `conectado: true`.
 
 El archivo `render.yaml` describe ese servicio y la base. Si el plan `free` no aparece en su cuenta, cree la base desde el panel y pegue `DATABASE_URL` a mano.

@@ -1,4 +1,4 @@
-const { getMemory, getPool, getPgPool, isMock, isPostgres } = require('../config/database');
+const { getMemory, getPool, getPgPool, isLocalStorage, isMock, isPostgres } = require('../config/database');
 
 const FECHA_SQL = `
     CONVERT(CHAR(4), YEAR(a.fecha_asistencia))
@@ -540,7 +540,14 @@ async function queryPg(sqlText) {
     return result.rows.map(mapRow);
 }
 
+function assertServerStore() {
+    if (isLocalStorage()) {
+        throw new AttendanceError('Las asistencias de este modo se guardan en el navegador, no en el servidor.', 400);
+    }
+}
+
 async function register(input) {
+    assertServerStore();
     const payload = normalizePayload(input || {});
     if (isMock()) {
         return registerMock(payload);
@@ -552,6 +559,7 @@ async function register(input) {
 }
 
 async function list() {
+    assertServerStore();
     if (isMock()) {
         return sortRows(getMemory().asistencias.map(withPerson));
     }
@@ -562,6 +570,7 @@ async function list() {
 }
 
 async function listToday() {
+    assertServerStore();
     if (isMock()) {
         const hoy = nowParts().fecha;
         return sortRows(getMemory().asistencias.map(withPerson))

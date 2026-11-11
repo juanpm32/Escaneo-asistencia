@@ -197,12 +197,15 @@ export default function Scanner({ onRegistered }) {
 
     return (
         <section className="panel scanner" aria-label="Escáner de DNI">
-            <div className="viewport">
+            <div className={scanning ? 'viewport viewport-live' : 'viewport'}>
                 <video ref={videoRef} muted autoPlay playsInline aria-label="Visor de la cámara" />
-                {scanning ? <div className="finder" aria-hidden="true" /> : null}
+                <div className="finder" aria-hidden="true">
+                    <span />
+                </div>
                 {phase === 'idle' ? (
-                    <p className="viewport-note">La cámara se activa al iniciar la lectura.</p>
+                    <p className="viewport-note">La cámara se enciende al leer el DNI.</p>
                 ) : null}
+                {busy ? <p className="viewport-note">Registrando…</p> : null}
             </div>
 
             {scanning ? (
@@ -212,11 +215,11 @@ export default function Scanner({ onRegistered }) {
             ) : (
                 <button type="button" className="scan-button" onClick={start} disabled={busy}>
                     <ScanLine size={20} strokeWidth={1.75} aria-hidden="true" />
-                    {busy ? 'Registrando…' : phase === 'done' ? 'Volver a escanear' : 'Iniciar lectura'}
+                    {busy ? 'Registrando…' : phase === 'done' ? 'Leer otro DNI' : 'Leer DNI'}
                 </button>
             )}
 
-            <p className="hint">Apunte al código lineal del reverso del DNI. Ahí está el número.</p>
+            <p className="hint">Apunte al código lineal del reverso. Ahí está el número.</p>
 
             {notice ? (
                 <div className={notice.ok ? 'result result-ok' : 'result result-bad'} role="status">

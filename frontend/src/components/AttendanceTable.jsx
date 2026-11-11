@@ -119,7 +119,7 @@ export default function AttendanceTable({ records, error }) {
             {error ? <p className="load-error">{error}</p> : null}
 
             {!error && records.length === 0 ? (
-                <p className="empty">Aún no hay asistencias. La primera aparece aquí al registrar un DNI.</p>
+                <p className="empty">No hay entradas. Lea un DNI para registrar la primera.</p>
             ) : null}
 
             {!error && records.length > 0 && filtered.length === 0 ? (
@@ -130,17 +130,10 @@ export default function AttendanceTable({ records, error }) {
                 <div className="cards">
                     {pageRows.map((row) => (
                         <article className="card" key={row.id_asistencia}>
-                            <header>
-                                <span>N.º {row.numero}</span>
-                                <strong className="card-dni">{row.numero_dni}</strong>
-                            </header>
-                            <p>{displayName(row) || row.numero_dni}</p>
-                            <dl>
-                                <div><dt>Fecha</dt><dd>{formatFecha(row.fecha_asistencia)}</dd></div>
-                                <div><dt>Hora</dt><dd>{row.hora_asistencia}</dd></div>
-                                <div><dt>Tipo</dt><dd>{row.tipo_asistencia}</dd></div>
-                                <div><dt>Estado</dt><dd className="estado">{row.estado}</dd></div>
-                            </dl>
+                            <p className="card-dni">{row.numero_dni}</p>
+                            <p className="card-time">{row.hora_asistencia}</p>
+                            <p className="card-name">{displayName(row) || 'Identificado por DNI'}</p>
+                            <p className="card-meta">{formatFecha(row.fecha_asistencia)} · {row.tipo_asistencia}</p>
                         </article>
                     ))}
                 </div>
